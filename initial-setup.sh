@@ -34,9 +34,7 @@ systemctl restart sshd
 apt-get update -qq > /dev/null
 apt-get install ufw -y
 ufw allow OpenSSH
-  if [[ "$?" -eq 0 ]]; then
-    echo "Everything was Ok."
-  else
+  if [[ "$?" -eq 1 ]]; then
     echo "Something went wrong, can't enable OpenSSH for firewall."
     exit 1
   fi
