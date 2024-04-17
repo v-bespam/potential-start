@@ -27,8 +27,8 @@ chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.ssh/
 sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
 
 # Enabling firewall
-apt update -qq > /dev/null
-apt install ufw -yqq
+apt-get update -qq > /dev/null
+apt-get install ufw -y
 ufw allow OpenSSH
   if [[ "$?" -eq 0 ]]; then
     echo "Everything was Ok."
@@ -36,6 +36,6 @@ ufw allow OpenSSH
     echo "Something went wrong, can't enable OpenSSH for firewall."
     exit 1
   fi
-ufw enable -y
+ufw enable
 echo "Everything looks good. You can now login with user $USERNAME and your ssh key."
 exit 0
