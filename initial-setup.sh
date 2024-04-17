@@ -9,9 +9,9 @@ fi
 # Checking system
 lsb_dist="$(. /etc/os-release && echo "$ID")"
 if [[ $lsb_dist != "ubuntu" ]]; then
-  read -p "This script is meant to work in Ubuntu. Press "y" to continue." OPTION
+  read -p "This script is meant to work in Ubuntu. Press y to continue. " OPTION
   if [[ "$OPTION" != "y" ]]; then
-    echo "Aborting"
+    echo "Aborting."
     exit 1
   fi
 fi
