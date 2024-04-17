@@ -1,7 +1,28 @@
 #/bin/bash
 
+# Checking that script runs from root
+if [ $EUID -ne 0 ]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
+# Checking system
+lsb_dist="$(. /etc/os-release && echo "$ID")"
+if [[ $lsb_dist -ne "ubuntu" ]]; then
+  echo "This script is meant to work in Ubuntu. Do you want to continue? (y/n)"
+  read $option 
+  case "$option" in
+    n) echo "Aborting."
+      exit 1
+    ;;
+    *) echo "Bad option"
+      exit 1
+    ;;
+  esac
+fi
+
 # Asking for hostname
-read -p "Enter the username: " HOSTNAME
+read -p "Enter new hostname: " HOSTNAME
 hostnamectl hostname "$HOSTNAME"
 
 # Asking for username
