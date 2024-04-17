@@ -1,19 +1,21 @@
-#/bin/bash
+#!/bin/bash
 
 # Checking that script runs from root
-if [ $EUID -ne 0 ]; then
+if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 
    exit 1
 fi
 
 # Checking system
 lsb_dist="$(. /etc/os-release && echo "$ID")"
-if [[ $lsb_dist -ne "ubuntu" ]]; then
+if [[ $lsb_dist != "ubuntu" ]]; then
   echo "This script is meant to work in Ubuntu. Do you want to continue? (y/n)"
   read $option 
   case "$option" in
     n) echo "Aborting."
       exit 1
+    ;;
+    y) continue
     ;;
     *) echo "Bad option"
       exit 1
