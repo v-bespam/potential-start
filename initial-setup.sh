@@ -1,30 +1,34 @@
 #/bin/bash
 
+# Asking for hostname
+read -p "Enter the username: " HOSTNAME
+hostnamectl hostname "$HOSTNAME"
+
 # Asking for username
 read -p "Enter the username: " USERNAME
 
 # Creating user
 useradd -m "$USERNAME"
+  if [[ "$?" -eq 1 ]]; then
+    echo "Something went wrong. Please try again."
+    exit 1
+  fi
 
 # Creating user password
 passwd "$USERNAME"
 
 # Adding them to sudo group
 usermod -aG sudo "$USERNAME"
-  if [[ "$?" -eq 1 ]]; then
-    echo "Something went wrong. Please try again."
-    exit 1
-  fi
 echo "User "$USERNAME" has been successfully added."
 
 # Import ssh key from root
-#rsync --archive --chown="$USERNAME":"$USERNAME" ~/.ssh /home/"$USERNAME"
 mkdir -p /home/"$USERNAME"/.ssh/
 cat ~/.ssh/authorized_keys > /home/"$USERNAME"/.ssh/authorized_keys
 chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.ssh/
 
 # Disabling root login for ssh
 sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
+systemctl restart sshd
 
 # Enabling firewall
 apt-get update -qq > /dev/null
