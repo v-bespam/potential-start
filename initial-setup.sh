@@ -9,18 +9,11 @@ fi
 # Checking system
 lsb_dist="$(. /etc/os-release && echo "$ID")"
 if [[ $lsb_dist != "ubuntu" ]]; then
-  echo "This script is meant to work in Ubuntu. Do you want to continue? (y/n)"
-  read $option 
-  case "$option" in
-    n) echo "Aborting."
-      exit 1
-    ;;
-    y) continue
-    ;;
-    *) echo "Bad option"
-      exit 1
-    ;;
-  esac
+  read -p "This script is meant to work in Ubuntu. Press "y" to continue." OPTION
+  if [[ "$OPTION" != "y" ]]; then
+    echo "Aborting"
+    exit 1
+  fi
 fi
 
 # Asking for hostname
@@ -51,7 +44,6 @@ chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.ssh/
 
 # Disabling root login for ssh
 sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
-systemctl restart sshd
 
 # Enabling firewall
 apt-get update -qq > /dev/null
@@ -63,4 +55,5 @@ ufw allow OpenSSH
   fi
 ufw enable
 echo "Everything looks good. You can now login with user $USERNAME and your ssh key."
+systemctl restart sshd
 exit 0
