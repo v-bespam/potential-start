@@ -12,3 +12,27 @@ ln -s /usr/share/easy-rsa/* ~/easy-rsa/
 chmod 700 ~/easy-rsa
 cd ~/easy-rsa
 ./easyrsa init-pki
+
+# Creating a Certificate Authority
+read -p "Enter the country name: " option
+echo "set_var EASYRSA_REQ_COUNTRY     \"$option\"" >> ~/easy-rsa/vars
+
+read -p "Enter the province name: " option
+echo "set_var EASYRSA_REQ_PROVINCE    \"$option\"" >> ~/easy-rsa/vars
+
+read -p "Enter the city name: " option
+echo "set_var EASYRSA_REQ_CITY        \"$option\"" >> ~/easy-rsa/vars
+
+read -p "Enter the organization name: " option
+echo "set_var EASYRSA_REQ_ORG         \"$option\"" >> ~/easy-rsa/vars
+
+read -p "Enter email: " option
+echo "set_var EASYRSA_REQ_EMAIL       \"$option\"" >> ~/easy-rsa/vars
+
+read -p "Enter the organizational unit: " option
+echo "set_var EASYRSA_REQ_OU          \"$option\"" >> ~/easy-rsa/vars
+
+echo "set_var EASYRSA_ALGO            \"ec\"" >> ~/easy-rsa/vars
+
+echo "set_var EASYRSA_DIGEST          \"sha512\"" >> ~/easy-rsa/vars
+
