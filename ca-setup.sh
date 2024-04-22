@@ -13,7 +13,7 @@ chmod 700 ~/easy-rsa
 cd ~/easy-rsa
 ./easyrsa init-pki
 
-# Creating a Certificate Authority
+# Write some vars for Easy-RSA
 read -p "Enter the country name: " option
 echo "set_var EASYRSA_REQ_COUNTRY     \"$option\"" >> ~/easy-rsa/vars
 
@@ -36,3 +36,5 @@ echo "set_var EASYRSA_ALGO            \"ec\"" >> ~/easy-rsa/vars
 
 echo "set_var EASYRSA_DIGEST          \"sha512\"" >> ~/easy-rsa/vars
 
+# Creating root public and private key pair for CA
+~/easy-rsa/.easyrsa build-ca
