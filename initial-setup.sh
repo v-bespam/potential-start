@@ -24,7 +24,7 @@ hostnamectl hostname "$HOSTNAME"
 read -p "Enter the username: " USERNAME
 
 # Creating user
-adduser "$USERNAME" --quietj
+adduser "$USERNAME" --quiet
   if [[ "$?" -eq 1 ]]; then
     echo "Something went wrong. Please try again."
     exit 1
@@ -43,7 +43,7 @@ chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.ssh/
 sed -i 's/^PermitRootLogin yes/PermitRootLogin no/g' /etc/ssh/sshd_config
 
 # Enabling firewall
-apt-get update -qq > /dev/null
+apt-get update -q
 apt-get install ufw -y
 ufw allow OpenSSH
   if [[ "$?" -eq 1 ]]; then
