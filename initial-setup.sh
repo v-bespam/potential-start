@@ -24,7 +24,7 @@ hostnamectl hostname "$HOSTNAME"
 read -p "Enter the username: " USERNAME
 
 # Creating user
-adduser --quiet --comment "" "$USERNAME"
+adduser --quiet --gecos "" "$USERNAME"
   if [[ "$?" -eq 1 ]]; then
     echo "Something went wrong. Please try again."
     exit 1
