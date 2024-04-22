@@ -24,14 +24,11 @@ hostnamectl hostname "$HOSTNAME"
 read -p "Enter the username: " USERNAME
 
 # Creating user
-useradd -m "$USERNAME"
+adduser "$USERNAME" --quietj
   if [[ "$?" -eq 1 ]]; then
     echo "Something went wrong. Please try again."
     exit 1
   fi
-
-# Creating user password
-passwd "$USERNAME"
 
 # Adding them to sudo group
 usermod -aG sudo "$USERNAME"
