@@ -10,8 +10,7 @@ sudo apt install easy-rsa
 mkdir ~/easy-rsa
 ln -s /usr/share/easy-rsa/* ~/easy-rsa/
 chmod 700 ~/easy-rsa
-cd ~/easy-rsa
-./easyrsa init-pki
+~/easy-rsa/easyrsa init-pki
 
 # Write some vars for Easy-RSA
 read -p "Enter the country name: " option
@@ -37,4 +36,4 @@ echo "set_var EASYRSA_ALGO            \"ec\"" >> ~/easy-rsa/vars
 echo "set_var EASYRSA_DIGEST          \"sha512\"" >> ~/easy-rsa/vars
 
 # Creating root public and private key pair for CA
-~/easy-rsa/.easyrsa build-ca
+~/easy-rsa/easyrsa build-ca
