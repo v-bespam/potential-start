@@ -1,6 +1,6 @@
 #!/bin/bash
 # Setting Easy-RSA directory
-dir="~/easy-rsa/"
+dir="~/easy-rsa"
 
 # Installing Easy-RSA and preparing directories
 sudo apt update
