@@ -36,4 +36,4 @@ echo "set_var EASYRSA_ALGO            \"ec\"" >> ~/easy-rsa/vars
 echo "set_var EASYRSA_DIGEST          \"sha512\"" >> ~/easy-rsa/vars
 
 # Creating root public and private key pair for CA
-~/easy-rsa/easyrsa build-ca
+~/easy-rsa/easyrsa build-ca ~/easy-rsa/
