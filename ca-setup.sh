@@ -1,7 +1,6 @@
 #!/bin/bash
 # Setting Easy-RSA directory
-username="$(whoami)"
-dir="/home/$username/easy-rsa"
+dir="/home/"$(whoami)"/easy-rsa"
 
 # Installing Easy-RSA and preparing directories
 sudo apt update
@@ -13,6 +12,7 @@ sudo apt install easy-rsa
 mkdir "$dir"
 ln -s /usr/share/easy-rsa/* "$dir"
 chmod 700 "$dir"
+cd "$dir"
 "$dir"/easyrsa init-pki
 
 # Write some vars for Easy-RSA
@@ -39,5 +39,4 @@ echo "set_var EASYRSA_ALGO            \"ec\"" >> "$dir"/vars
 echo "set_var EASYRSA_DIGEST          \"sha512\"" >> "$dir"/vars
 
 # Creating root public and private key pair for CA
-cd "$dir"
 ./easyrsa build-ca
