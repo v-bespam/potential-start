@@ -1,6 +1,7 @@
 #!/bin/bash
 # Setting Easy-RSA directory
-dir="~/easy-rsa"
+username="$(whoami)"
+dir="/home/$username/easy-rsa"
 
 # Installing Easy-RSA and preparing directories
 sudo apt update
