@@ -39,4 +39,13 @@ echo "set_var EASYRSA_ALGO            \"ec\"" >> "$dir"/vars
 echo "set_var EASYRSA_DIGEST          \"sha512\"" >> "$dir"/vars
 
 # Creating root public and private key pair for CA
-./easyrsa build-ca
+"$dir"/easyrsa build-ca
+  if [[ "$?" -eq 1 ]]; then
+    echo "Can't build CA. Please try again."
+    exit 1
+  elif [[ "$?" -eq 0 ]]; then
+    echo "Everything looks good."
+    exit 0
+  else
+    echo "There is a some erros. Please analyze output and log files."
+  fi
