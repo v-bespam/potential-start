@@ -48,6 +48,7 @@ openvpn_req ()
 }
 
 echo "Please choose where you configured a CA server"
+read option
 
 case "$option" in
   1) echo "On a separate server. Not here"
