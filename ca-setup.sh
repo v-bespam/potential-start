@@ -9,9 +9,9 @@ fi
 # Setting Easy-RSA directory
 dir="/home/"$(whoami)"/easy-rsa"
 
-# Installing Easy-RSA and preparing directories
-sudo apt update
-sudo apt install easy-rsa
+# Installing Easy-RSA, preparing directories and init PKI
+sudo apt update -q
+sudo apt install easy-rsa -y
   if [[ "$?" -eq 1 ]]; then
     echo "Can't install Easy-RSA. Please try again."
     exit 1
