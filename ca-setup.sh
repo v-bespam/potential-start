@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# Checking that script not runs from root
+if [[ $EUID -eq 0 ]]; then
+   echo "This script must be run as regular user with administrative rules" 
+   exit 1
+fi
+
 # Setting Easy-RSA directory
 dir="/home/"$(whoami)"/easy-rsa"
 
