@@ -47,12 +47,15 @@ echo "set_var EASYRSA_DIGEST          \"sha512\"" >> "$dir"/vars
 
 # Creating root public and private key pair for CA
 "$dir"/easyrsa build-ca
-  if [[ "$?" -eq 1 ]]; then
+exit_code="$?"
+
+  if [[ "exit_code" -eq 1 ]]; then
     echo "Can't build CA. Please try again."
     exit 1
-  elif [[ "$?" -eq 0 ]]; then
+  elif [[ "exit_code" -eq 0 ]]; then
     echo "Everything looks good."
     exit 0
   else
-    echo "There is a some erros. Please analyze output and log files."
+    echo "There is are some erros. Please analyze output and log files."
+    $?="$exit_code"
   fi
