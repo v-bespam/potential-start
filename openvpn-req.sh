@@ -47,17 +47,17 @@ openvpn_req ()
   cat "$dir"/pki/reqs/server.req
 }
 
-echo "Please choose where you configured a CA server"
+echo "Please choose where you configured a CA server (1 or 2)"
+echo "1 - On a separate server. Not here"
+echo "2 - On this server. Right here"
 read option
 
 case "$option" in
-  1) echo "On a separate server. Not here"
-    openvpn_inst
+  1)openvpn_inst
     init-pki
     openvpn_req
   ;;
-  2) echo "On this server. Right here"
-    openvpn_inst
+  2)openvpn_inst
     openvpn_req
   ;;
   *) echo "Bad option"
