@@ -6,18 +6,17 @@ if [[ $EUID -eq 0 ]]; then
    exit 1
 fi
 
-# Setting Easy-RSA and client configs directories
+# Setting Easy-RSA and clients config directories
 dir="/home/"$(whoami)"/easy-rsa"
 clientdir="/home"$(whoami)"/client-configs"
 
-# Function for installing OpenVPN if CA is configured on a separate server
+# Function for installing OpenVPN and Easy-RSA
 openvpn_inst ()
 {
-  # Installing Easy-RSA and preparing directories
   sudo apt-get update -q
   sudo apt-get install openvpn easy-rsa -y
   if [[ "$?" -eq 1 ]]; then
-    echo "Can't install Easy-RSA. Please try again."
+    echo "Can't install OpenVPN or Easy-RSA. Please try again."
     exit 1
   fi
 }
@@ -37,12 +36,13 @@ init_pki ()
   "$dir"/easyrsa init-pki
 }
 
-# Function for creating an OpenVPN Server Certificate Request and Private Key
+# Function for creating an Certificate Request and Private Key
 openvpn_req ()
 {
   # Checking for arguments
   if [ $# -ne 1 ]; then
-    echo "Использование: $0 <имя_запроса>"
+    echo "Please specify request name"
+    echo "Usage: $0 <reqname>"
     exit 1
   fi
   reqname="$1"
@@ -52,18 +52,17 @@ openvpn_req ()
     echo "Can't generate OpenVPN server request. Please try again."
     exit 1
   fi
-  #sudo cp -f "$dir"/pki/private/server.key /etc/openvpn/server/
 }
 
-# Function for Signing the OpenVPN Server’s Certificate Request and generating TLS pre-shared key
+# Function for Signing Certificate Request
 openvpn_sign ()
 {
   # Checking for arguments
   if [ $# -ne 3 ]; then
-    echo "Использование: $0 <имя_запроса>"
+    echo "Please specify arguments. Full path to request file, name of the request and type (server or client)"
+    echo "Usage: $0 <reqfile> <reqname> <type>"
     exit 1
   fi
-
   reqfile="$1"
   reqname="$2"
   type="$3"
@@ -71,11 +70,9 @@ openvpn_sign ()
   "$dir"/easyrsa import-req "$reqfile" "$reqname"
   "$dir"/easyrsa sign-req "$type" "$reqname"
   if [[ "$?" -eq 1 ]]; then
-    echo "Can't sign OpenVPN server request. Please try again."
+    echo "Can't sign Certificate Request. Please try again."
     exit 1
   fi
-#  sudo cp -f "$dir"/pki/issued/server.crt /etc/openvpn/server/
-#  sudo cp -f "$dir"/pki/ca.crt /etc/openvpn/server/
 }
 
 # Generating TLS pre-shared key
@@ -87,25 +84,55 @@ openvpn_ta ()
     echo "Can't generate OpenVPN TLS pre-shared key. Please try again."
     exit 1
   fi
-  sudo cp ta.key /etc/openvpn/server
 }
 
 # Generating a Client Certificate and Key Pair
-openvpn_client ()
+# openvpn_client ()
+# {
+#  mkdir -p "$clientdir"/keys
+#  chmod -R 700 "$clientdir"
+#  read -p "Please enter a OpenVPN client name: " clientname
+#  cd "$dir"
+#  "$dir"/easyrsa gen-req "$clientname" nopass
+#  cp pki/private/"$clientname".key "$clientdir"/keys/
+#  "$dir"/easyrsa import-req
+# }
+
+same_vps ()
 {
- mkdir -p "$clientdir"/keys
- chmod -R 700 "$clientdir"
- read -p "Please enter a OpenVPN client name: " clientname
- cd "$dir"
- "$dir"/easyrsa gen-req "$clientname" nopass
- cp pki/private/"$clientname".key "$clientdir"/keys/
- "$dir"/easyrsa import-req
+  # Installing OpenVPN
+  openvpn_inst
+  sudo cp -f "$dir"/pki/ca.crt /etc/openvpn/server/
+
+  # Create request for OpenVPN server and sign it
+  openvpn_req server
+  sudo cp -f "$dir"/pki/private/server.key /etc/openvpn/server/
+  openvpn_sign "$dir"/pki/reqs/server.req server server
+  sudo cp -f "$dir"/pki/issued/server.crt /etc/openvpn/server/
+  
+  # Creating OpenVPN TLS pre-shared key
+  openvpn_ta
+  sudo cp ta.key /etc/openvpn/server
+  
+  # Generating request for OpenVPN client and sign it
+  mkdir -p "$clientdir"/keys
+  chmod -R 700 "$clientdir"
+  read -p "Please enter a OpenVPN client name: " clientname
+  openvpn_req "$clientname"
+  cp -f "$dir"/pki/private/"$clientname".key "$clientdir"/keys
+  openvpn_sign "$dir"/pki/reqs/"$clientname".req "$clientname" client
+  cp -f "$dir"/pki/issued/"$clientname".crt "$clientdir"/keys
+
+  # Copying another keys to clients directory
+  cp "$dir"/ta.key "$clientdir"/keys
+  sudo cp -f /etc/openvpn/server/ca.crt "$clientdir"/keys
+  sudo chown "$(whoami)"."$(whoami)" "$clientdir"/keys
 }
 
 echo "Please choose where you configured a CA server (1 or 2)"
 echo "1 - On a separate server. Not here"
 echo "2 - On this server. Right here"
-echo "3 - OpenVPN server request seccefully singed. Continue to setup OpenVPN server"
+echo "3 - Create OpenVPN server request and sign it"
 read option
 
 case "$option" in
@@ -117,14 +144,12 @@ case "$option" in
     cat "$dir"/pki/reqs/server.req
     exit 0
   ;;
-  2)openvpn_inst
-    openvpn_req
-    openvpn_sign
-    openvpn_ta
+  2)echo "Trying to set-up OpenVPN Server"
+    same_vps
   ;;
   3)echo "Creating request and sign it"
     openvpn_req server
-    openvpn_sign "$dir"/pki/server.req server server
+    openvpn_sign "$dir"/pki/reqs/server.req server server
   ;;
   *) echo "Bad option"
     exit 1
