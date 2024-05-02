@@ -97,26 +97,28 @@ openvpn_conf ()
   # sudo sed -i 's/^;group nogroup/group nogroup/' /etc/openvpn/server/server.conf
   
   # Creating simple OpenVPN config
-  sudo echo "port 1194" > /etc/openvpn/server/server.conf
-  sudo echo "proto udp" >> /etc/openvpn/server/server.conf
-  sudo echo "dev tun" >> /etc/openvpn/server/server.conf
-  sudo echo "ca ca.crt" >> /etc/openvpn/server/server.conf
-  sudo echo "cert server.crt" >> /etc/openvpn/server/server.conf
-  sudo echo "key server.key" >> /etc/openvpn/server/server.conf
-  sudo echo "dh none" >> /etc/openvpn/server/server.conf
-  sudo echo "server 10.8.0.0 255.255.255.0" >> /etc/openvpn/server/server.conf
-  sudo echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> /etc/openvpn/server/server.conf
-  sudo echo "keepalive 10 120" >> /etc/openvpn/server/server.conf
-  sudo echo "tls-crypt ta.key" >> /etc/openvpn/server/server.conf
-  sudo echo "cipher AES-256-GCM" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
-  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo -e "port 1194
+  proto udp
+  dev tun
+  ca ca.crt
+  cert server.crt
+  key server.key
+  dh none
+  server 10.8.0.0 255.255.255.0
+  ifconfig-pool-persist /var/log/openvpn/ipp.txt
+  keepalive 10 120
+  tls-crypt ta.key
+  cipher AES-256-GCM
+  auth SHA256
+  user nobody
+  group nogroup
+  persist-key
+  persist-tun
+  status /var/log/openvpn/openvpn-status.log
+  verb 3
+  explicit-exit-notify 1" > /etc/openvpn/server/server.conf
   
+  # Asking for LZ4-v2 compression
   until [[ $ANSWER =~ (y|n) ]]; do
     read -rp "Do you want to enable LZ4-v2 compression? [y/n]: " -e ANSWER
   done
@@ -218,7 +220,7 @@ same_vps ()
   cp -f "$dir"/pki/issued/"$clientname".crt "$clientdir"/keys
 
   # Copying another keys to clients directory
-  cp "$dir"/ta.key "$clientdir"/keys
+  cp -f "$dir"/ta.key "$clientdir"/keys
   sudo cp -f /etc/openvpn/server/ca.crt "$clientdir"/keys
   sudo chown "$(whoami)"."$(whoami)" "$clientdir"/keys/*
 }
