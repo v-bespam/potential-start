@@ -89,14 +89,45 @@ openvpn_ta ()
 # Configuaring OpenVPN server
 openvpn_conf ()
 {
-  sudo cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf /etc/openvpn/server/
-  sudo sed -i -e 's/^tls-auth ta.key 0 # This file is secret/;&\ntls-crypt ta.key/' /etc/openvpn/server/server.conf
-  sudo sed -i -e 's/^cipher AES-256-CBC/;&\ncipher AES-256-GCM\nauth SHA256/' /etc/openvpn/server/server.conf
-  sudo sed -i -e '/^dh dh2048.pem/ { s/^/;/; n; s/^/dh none\n/ }' -e '/^dh dh.pem/ { s/^/;/; n; s/^/dh none\n/ }' /etc/openvpn/server/server.conf
-  sudo sed -i 's/^;user nobody/user nobody/' /etc/openvpn/server/server.conf
-  sudo sed -i 's/^;group nogroup/group nogroup/' /etc/openvpn/server/server.conf
+  # sudo cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf /etc/openvpn/server/
+  # sudo sed -i -e 's/^tls-auth ta.key 0 # This file is secret/;&\ntls-crypt ta.key/' /etc/openvpn/server/server.conf
+  # sudo sed -i -e 's/^cipher AES-256-CBC/;&\ncipher AES-256-GCM\nauth SHA256/' /etc/openvpn/server/server.conf
+  # sudo sed -i -e '/^dh dh2048.pem/ { s/^/;/; n; s/^/dh none\n/ }' -e '/^dh dh.pem/ { s/^/;/; n; s/^/dh none\n/ }' /etc/openvpn/server/server.conf
+  # sudo sed -i 's/^;user nobody/user nobody/' /etc/openvpn/server/server.conf
+  # sudo sed -i 's/^;group nogroup/group nogroup/' /etc/openvpn/server/server.conf
+  
+  # Creating simple OpenVPN config
+  sudo echo "port 1194" > /etc/openvpn/server/server.conf
+  sudo echo "proto udp" >> /etc/openvpn/server/server.conf
+  sudo echo "dev tun" >> /etc/openvpn/server/server.conf
+  sudo echo "ca ca.crt" >> /etc/openvpn/server/server.conf
+  sudo echo "cert server.crt" >> /etc/openvpn/server/server.conf
+  sudo echo "key server.key" >> /etc/openvpn/server/server.conf
+  sudo echo "dh none" >> /etc/openvpn/server/server.conf
+  sudo echo "server 10.8.0.0 255.255.255.0" >> /etc/openvpn/server/server.conf
+  sudo echo "ifconfig-pool-persist /var/log/openvpn/ipp.txt" >> /etc/openvpn/server/server.conf
+  sudo echo "keepalive 10 120" >> /etc/openvpn/server/server.conf
+  sudo echo "tls-crypt ta.key" >> /etc/openvpn/server/server.conf
+  sudo echo "cipher AES-256-GCM" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  sudo echo "" >> /etc/openvpn/server/server.conf
+  
+  until [[ $ANSWER =~ (y|n) ]]; do
+    read -rp "Do you want to enable LZ4-v2 compression? [y/n]: " -e ANSWER
+  done
+  if [[ $ANSWER == "y" ]]; then
+    sudo echo "compress lz4-v2" >> /etc/openvpn/server/server.conf
+    sudo echo 'push "compress lz4-v2"' >> /etc/openvpn/server/server.conf
+  elif [[ $ANSWER == "n" ]]; then
+    echo ""
+  fi
 
-  echo "Do you want to use the VPN to route all of your client traffic over the VPN? (y/n)"
+  echo "Do you want to use the VPN to route all of your clients traffic over the VPN? (y/n)"
   echo ""
   read -r option
   if [[ "$option" == "y" ]]; then
@@ -109,30 +140,52 @@ openvpn_conf ()
     echo "4 - Yandex"
     echo "5 - Custom DNS"
 
-    read -r option2
+    read -p option2
     case "$option2" in
       1) # Cloudflare
-        echo 'push "dhcp-option DNS 1.0.0.1"' >>/etc/openvpn/server.conf
-        echo 'push "dhcp-option DNS 1.1.1.1"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 1.0.0.1"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 1.1.1.1"' >>/etc/openvpn/server.conf
       ;;
       2) # OpenDNS
-        echo 'push "dhcp-option DNS 208.67.222.222"' >>/etc/openvpn/server.conf
-        echo 'push "dhcp-option DNS 208.67.220.220"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 208.67.222.222"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 208.67.220.220"' >>/etc/openvpn/server.conf
       ;;
       3) # Google
-        echo 'push "dhcp-option DNS 8.8.8.8"' >>/etc/openvpn/server.conf
-        echo 'push "dhcp-option DNS 8.8.4.4"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 8.8.8.8"' >>/etc/openvpn/server.conf
+        sud echo 'push "dhcp-option DNS 8.8.4.4"' >>/etc/openvpn/server.conf
       ;;
       4) # Yandex
-        echo 'push "dhcp-option DNS 77.88.8.8"' >>/etc/openvpn/server.conf
-        echo 'push "dhcp-option DNS 77.88.8.1"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 77.88.8.8"' >>/etc/openvpn/server.conf
+        sudo echo 'push "dhcp-option DNS 77.88.8.1"' >>/etc/openvpn/server.conf
       ;;
       4) # Custom DNS
-        echo 'push "dhcp-option DNS 77.88.8.8"' >>/etc/openvpn/server.conf
-        echo 'push "dhcp-option DNS 77.88.8.1"' >>/etc/openvpn/server.conf
+        while true; do
+          echo "Enter the DNS server address:"
+          echo ""
+          read dns_server
+
+          if [[ $dns_server =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "You entered DNS server address: $dns_server"
+            read -p "Is this the correct DNS server address? (y/n): " confirmation
+            if [[ $confirmation == "y" ]]; then
+              sudo echo "push \"dhcp-option DNS $dns_server\"" >>/etc/openvpn/server.conf
+
+              read -p "Do you want to enter another DNS server address? (y/n): " add_more
+              if [[ $add_more == "y" ]]; then
+                continue
+              else
+                break
+              fi
+            else
+              echo "Please enter the address again."
+            fi
+          else
+            echo "Error: Invalid DNS server address entered. Please enter the address in the format xxx.xxx.xxx.xxx"
+          fi
+        done
       ;;
-      *) echo default
-      ;;
+      # *) echo default
+      # ;;
     esac
   elif [[ "$option" == "n" ]]; then
     echo "Traffic from your clients will not not be pushed through VPN"
