@@ -129,6 +129,7 @@ openvpn_conf ()
     echo ""
   fi
 
+  # Routing clients traffick and setting-up DNS
   echo "Do you want to use the VPN to route all of your clients traffic over the VPN? (y/n)"
   echo ""
   read -r option
@@ -142,7 +143,7 @@ openvpn_conf ()
     echo "4 - Yandex"
     echo "5 - Custom DNS"
 
-    read -p option2
+    read -r option2
     case "$option2" in
       1) # Cloudflare
         sudo echo 'push "dhcp-option DNS 1.0.0.1"' >>/etc/openvpn/server.conf
@@ -164,15 +165,15 @@ openvpn_conf ()
         while true; do
           echo "Enter the DNS server address:"
           echo ""
-          read dns_server
+          read -r dns_server
 
           if [[ $dns_server =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "You entered DNS server address: $dns_server"
-            read -p "Is this the correct DNS server address? (y/n): " confirmation
+            read -rp "Is this the correct DNS server address? (y/n): " confirmation
             if [[ $confirmation == "y" ]]; then
               sudo echo "push \"dhcp-option DNS $dns_server\"" >>/etc/openvpn/server.conf
 
-              read -p "Do you want to enter another DNS server address? (y/n): " add_more
+              read -rp "Do you want to enter another DNS server address? (y/n): " add_more
               if [[ $add_more == "y" ]]; then
                 continue
               else
@@ -192,6 +193,13 @@ openvpn_conf ()
   elif [[ "$option" == "n" ]]; then
     echo "Traffic from your clients will not not be pushed through VPN"
   fi
+
+  # Adjusting the OpenVPN Server Networking Configuration
+  sudo echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+  sudo sysctl -p
+
+  # Getting public interface from the default route
+  NIC=$(ip -4 route ls | grep default | sed -n 's/.*dev \(\S\+\).*/\1/p' | head -1)
 }
 
 same_vps ()
@@ -213,7 +221,7 @@ same_vps ()
   # Generating request for OpenVPN client and sign it
   mkdir -p "$clientdir"/keys
   chmod -R 700 "$clientdir"
-  read -p "Please enter a OpenVPN client name: " clientname
+  read -rp "Please enter a OpenVPN client name: " clientname
   openvpn_req "$clientname"
   cp -f "$dir"/pki/private/"$clientname".key "$clientdir"/keys
   openvpn_sign "$dir"/pki/reqs/"$clientname".req "$clientname" client
@@ -229,7 +237,7 @@ echo "Please choose where you configured a CA server (1 or 2)"
 echo "1 - On a separate server. Not here"
 echo "2 - On this server. Right here"
 echo "3 - Create OpenVPN server request and sign it"
-read option
+read -r option
 
 case "$option" in
   1)openvpn_inst
