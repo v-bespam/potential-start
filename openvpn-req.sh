@@ -89,13 +89,6 @@ openvpn_ta ()
 # Configuaring OpenVPN server
 openvpn_conf ()
 {
-  # sudo cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf /etc/openvpn/server/
-  # sudo sed -i -e 's/^tls-auth ta.key 0 # This file is secret/;&\ntls-crypt ta.key/' /etc/openvpn/server/server.conf
-  # sudo sed -i -e 's/^cipher AES-256-CBC/;&\ncipher AES-256-GCM\nauth SHA256/' /etc/openvpn/server/server.conf
-  # sudo sed -i -e '/^dh dh2048.pem/ { s/^/;/; n; s/^/dh none\n/ }' -e '/^dh dh.pem/ { s/^/;/; n; s/^/dh none\n/ }' /etc/openvpn/server/server.conf
-  # sudo sed -i 's/^;user nobody/user nobody/' /etc/openvpn/server/server.conf
-  # sudo sed -i 's/^;group nogroup/group nogroup/' /etc/openvpn/server/server.conf
-  
   # Creating simple OpenVPN config
   sudo echo -e "port 1194
   proto udp
@@ -200,6 +193,29 @@ openvpn_conf ()
 
   # Getting public interface from the default route
   NIC=$(ip -4 route ls | grep default | sed -n 's/.*dev \(\S\+\).*/\1/p' | head -1)
+
+  # Adding rules for UFW
+  echo "# NAT table rules for OpenVPN
+  *nat
+  :POSTROUTING ACCEPT [0:0]
+  # Allow traffic from OpenVPN client to $NIC
+  -A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
+  COMMIT" >> /etc/ufw/before.rules
+
+  # Changing default forward policy for UFW
+  sudo sed -i 's/DEFAULT_FORWARD_POLICY="DROP"/DEFAULT_FORWARD_POLICY="ACCEPT"/g' /etc/default/ufw
+
+  sudo ufw allow 1194/udp
+  sudo ufw reload
+
+  # Starting OpenVPN server
+  sudo systemctl -f enable openvpn-server@server.service
+  sudo systemctl start openvpn-server@server.service
+
+  if [[ "$?" -eq 1 ]]; then
+    echo "Can't start OpenVPN server. Please try again."
+    exit 1
+  fi
 }
 
 same_vps ()
@@ -231,6 +247,8 @@ same_vps ()
   cp -f "$dir"/ta.key "$clientdir"/keys
   sudo cp -f /etc/openvpn/server/ca.crt "$clientdir"/keys
   sudo chown "$(whoami)"."$(whoami)" "$clientdir"/keys/*
+
+  openvpn_conf
 }
 
 echo "Please choose where you configured a CA server (1 or 2)"
