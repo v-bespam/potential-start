@@ -90,7 +90,7 @@ openvpn_ta ()
 openvpn_conf ()
 {
   # Creating simple OpenVPN config
-  sudo echo -e "port 1194
+  sudo sh -c 'echo -e "port 1194
   proto udp
   dev tun
   ca ca.crt
@@ -109,15 +109,15 @@ openvpn_conf ()
   persist-tun
   status /var/log/openvpn/openvpn-status.log
   verb 3
-  explicit-exit-notify 1" > /etc/openvpn/server/server.conf
+  explicit-exit-notify 1" > /etc/openvpn/server/server.conf'
   
   # Asking for LZ4-v2 compression
   until [[ $ANSWER =~ (y|n) ]]; do
     read -rp "Do you want to enable LZ4-v2 compression? [y/n]: " -e ANSWER
   done
   if [[ $ANSWER == "y" ]]; then
-    sudo echo "compress lz4-v2" >> /etc/openvpn/server/server.conf
-    sudo echo 'push "compress lz4-v2"' >> /etc/openvpn/server/server.conf
+    sudo sh -c 'echo -e "compress lz4-v2
+    compress lz4-v2" >> /etc/openvpn/server/server.conf'
   elif [[ $ANSWER == "n" ]]; then
     echo ""
   fi
@@ -127,7 +127,7 @@ openvpn_conf ()
   echo ""
   read -r option
   if [[ "$option" == "y" ]]; then
-    sudo echo "push \"redirect-gateway def1 bypass-dhcp\"" >> /etc/openvpn/server/server.conf
+    sudo sh -c 'echo "push \"redirect-gateway def1 bypass-dhcp\"" >> /etc/openvpn/server/server.conf'
     
     echo "Please choose a DNS server:"
     echo "1 - Cloudflare"
@@ -139,8 +139,8 @@ openvpn_conf ()
     read -r option2
     case "$option2" in
       1) # Cloudflare
-        sudo echo 'push "dhcp-option DNS 1.0.0.1"' >>/etc/openvpn/server.conf
-        sudo echo 'push "dhcp-option DNS 1.1.1.1"' >>/etc/openvpn/server.conf
+        sudo sh -c "echo 'push "dhcp-option DNS 1.0.0.1"' >>/etc/openvpn/server.conf"
+        sudo sh -c "echo 'push "dhcp-option DNS 1.1.1.1"' >>/etc/openvpn/server.conf"
       ;;
       2) # OpenDNS
         sudo echo 'push "dhcp-option DNS 208.67.222.222"' >>/etc/openvpn/server.conf
