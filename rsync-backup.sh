@@ -25,6 +25,8 @@ if [[ "$#" -eq 0 ]]; then
 fi
 
 DRY_RUN=""
+POSITIONAL=()
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     -h|--help)
@@ -35,10 +37,14 @@ while [[ "$#" -gt 0 ]]; do
       shift
       ;;
     *)
-      break
+      POSITIONAL+=("$1") # save positional arguments
+      shift
       ;;
   esac
 done
+
+# Restore positional arguments
+set -- "${POSITIONAL[@]}"
 
 readonly SOURCE_DIR="${1:-${HOME}}"
 readonly BACKUP_DIR="${2:-/mnt/data/backups}"
@@ -54,11 +60,13 @@ mkdir -p "${BACKUP_DIR}"
 mkdir -p "${DELETED_BACKUP_DIR}"
 
 log_info() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $1" >> "${LOG_FILE}"
+  local message="$1"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $message" | tee -a "${LOG_FILE}"
 }
 
 log_error() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1" >> "${LOG_FILE}"
+  local message="$1"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $message" | tee -a "${LOG_FILE}" >&2
 }
 
 # Check if rsync is installed
