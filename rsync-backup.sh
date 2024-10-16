@@ -6,12 +6,15 @@ set -o pipefail
 
 # Function to display usage information
 usage() {
+  echo "rsync backup script for incremental backups"
+  echo ""
   echo "Usage: $0 [options] [source_directory] [backup_directory] [retention_days]"
+  echo ""
   echo "Options:"
   echo "  -h, --help          Show this help message."
   echo "  --dry-run           Perform a trial run with rsync, showing what would be done."
   echo "  source_directory    The directory to back up (defaults to the user's home directory)."
-  echo "  backup_directory     The directory where backups will be stored (defaults to /mnt/data/backups)."
+  echo "  backup_directory    The directory where backups will be stored (defaults to /mnt/data/backups)."
   echo "  retention_days      The number of days to keep deleted backups (defaults to 30 days)."
   exit 1
 }
@@ -46,6 +49,10 @@ readonly LATEST_LINK="${BACKUP_DIR}/latest"
 readonly DELETED_BACKUP_DIR="${BACKUP_DIR}/deleted"
 readonly LOG_FILE="${BACKUP_DIR}/backup.log"
 
+# Create backup directories
+mkdir -p "${BACKUP_DIR}"
+mkdir -p "${DELETED_BACKUP_DIR}"
+
 log_info() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $1" >> "${LOG_FILE}"
 }
@@ -54,22 +61,24 @@ log_error() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1" >> "${LOG_FILE}"
 }
 
+# Check if rsync is installed
+if ! command -v rsync &> /dev/null; then
+  log_error "rsync is not installed. Please install rsync to proceed."
+  exit 1
+fi
+
+# Check if the source directory exists
+if [[ ! -d "${SOURCE_DIR}" ]]; then
+  log_error "Source directory does not exist: ${SOURCE_DIR}"
+  exit 1
+fi
+
 # Check available disk space
 REQUIRED_SPACE=$(du -s "${SOURCE_DIR}" | awk '{print $1}')
 AVAILABLE_SPACE=$(df "${BACKUP_DIR}" | tail -1 | awk '{print $4}')
 
 if (( AVAILABLE_SPACE < REQUIRED_SPACE )); then
   log_error "Not enough disk space for backup."
-  exit 1
-fi
-
-# Create backup directories
-mkdir -p "${BACKUP_DIR}"
-mkdir -p "${DELETED_BACKUP_DIR}"
-
-# Check if the source directory exists
-if [[ ! -d "${SOURCE_DIR}" ]]; then
-  log_error "Source directory does not exist: ${SOURCE_DIR}"
   exit 1
 fi
 
