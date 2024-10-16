@@ -91,11 +91,14 @@ if (( AVAILABLE_SPACE < REQUIRED_SPACE )); then
 fi
 
 # Perform the backup
-{
-  log_info "Starting backup at ${DATETIME}"
-  
-  if rsync -av --compress --progress ${DRY_RUN} --delete --backup --backup-dir="${DELETED_BACKUP_DIR}" --link-dest="${LATEST_LINK}" \
+log_info "Starting backup at ${DATETIME}"
+
+if [[ -n "${DRY_RUN}" ]]; then
+  log_info "Dry run mode: No files will be copied."
+else
+  if rsync -av --compress --info=progress2 --delete --backup --backup-dir="${DELETED_BACKUP_DIR}" --link-dest="${LATEST_LINK}" \
     --exclude=".cache" \
+    --log-file="${LOG_FILE}" \
     "${SOURCE_DIR}/" \
     "${BACKUP_PATH}"; then
     log_info "Backup completed successfully."
@@ -103,7 +106,7 @@ fi
     log_error "Error during backup."
     exit 1
   fi
-} >> "${LOG_FILE}" 2>&1
+fi
 
 # Update the symbolic link to the latest backup
 if [[ -L "${LATEST_LINK}" ]]; then
