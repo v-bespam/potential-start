@@ -4,6 +4,19 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# Telegram Bot Token and Chat ID
+TELEGRAM_BOT_TOKEN="YOUR_TOKEN"
+TELEGRAM_CHAT_ID="YOUR_CHAT_ID"
+
+# Function to send a message to Telegram
+send_telegram_message() {
+  local message="$1"
+  curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+       -d "chat_id=${TELEGRAM_CHAT_ID}" \
+       -d "text=${message}" \
+       -d "parse_mode=Markdown"
+}
+
 # Function to display usage information
 usage() {
   echo "rsync backup script for incremental backups"
@@ -69,6 +82,7 @@ fi
 # Check if the source directory exists
 if [[ ! -d "${SOURCE_DIR}" ]]; then
   log_error "Source directory does not exist: ${SOURCE_DIR}"
+  send_telegram_message "Source directory does not exist. Backup failed"
   exit 1
 fi
 
@@ -78,6 +92,7 @@ AVAILABLE_SPACE=$(df "${BACKUP_DIR}" | tail -1 | awk '{print $4}')
 
 if (( AVAILABLE_SPACE < REQUIRED_SPACE )); then
   log_error "Not enough disk space for backup. Required: ${REQUIRED_SPACE}, Available: ${AVAILABLE_SPACE}"
+  send_telegram_message "Not enough disk space for backup"
   exit 1
 fi
 
@@ -95,6 +110,7 @@ else
     log_info "Backup completed successfully."
   else
     log_error "Error during backup."
+    send_telegram_message "Error during backup"
     exit 1
   fi
 fi
@@ -106,3 +122,4 @@ fi
 ln -s "${BACKUP_PATH}" "${LATEST_LINK}"
 
 log_info "Latest backup link updated."
+send_telegram_message "Latest backup was successfull"
