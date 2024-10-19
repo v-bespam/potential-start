@@ -8,14 +8,13 @@ set -o pipefail
 usage() {
   echo "rsync backup script for incremental backups"
   echo ""
-  echo "Usage: $0 [options] [source_directory] [backup_directory] [retention_days]"
+  echo "Usage: $0 [options] [source_directory] [backup_directory]"
   echo ""
   echo "Options:"
   echo "  -h, --help          Show this help message."
   echo "  --dry-run           Perform a trial run with rsync, showing what would be done."
   echo "  source_directory    The directory to back up (defaults to the user's home directory)."
   echo "  backup_directory    The directory where backups will be stored (defaults to /mnt/data/backups)."
-  echo "  retention_days      The number of days to keep deleted backups (defaults to 30 days)."
   exit 1
 }
 
@@ -48,16 +47,13 @@ set -- "${POSITIONAL[@]}"
 
 readonly SOURCE_DIR="${1:-${HOME}}"
 readonly BACKUP_DIR="${2:-/mnt/data/backups}"
-readonly RETENTION_DAYS="${3:-30}"  # Allow specifying retention days via command line
 readonly DATETIME="$(date '+%Y-%m-%d_%H:%M:%S')"
 readonly BACKUP_PATH="${BACKUP_DIR}/${DATETIME}"
 readonly LATEST_LINK="${BACKUP_DIR}/latest"
-readonly DELETED_BACKUP_DIR="${BACKUP_DIR}/deleted"
 readonly LOG_FILE="${BACKUP_DIR}/backup.log"
 
 # Create backup directories
 mkdir -p "${BACKUP_DIR}"
-mkdir -p "${DELETED_BACKUP_DIR}"
 
 log_info() {
   local message="$1"
@@ -86,7 +82,7 @@ REQUIRED_SPACE=$(du -s "${SOURCE_DIR}" | awk '{print $1}')
 AVAILABLE_SPACE=$(df "${BACKUP_DIR}" | tail -1 | awk '{print $4}')
 
 if (( AVAILABLE_SPACE < REQUIRED_SPACE )); then
-  log_error "Not enough disk space for backup."
+  log_error "Not enough disk space for backup. Required: ${REQUIRED_SPACE}, Available: ${AVAILABLE_SPACE}"
   exit 1
 fi
 
@@ -96,7 +92,7 @@ log_info "Starting backup at ${DATETIME}"
 if [[ -n "${DRY_RUN}" ]]; then
   log_info "Dry run mode: No files will be copied."
 else
-  if rsync -av --compress --info=progress2 --delete --backup --backup-dir="${DELETED_BACKUP_DIR}" --link-dest="${LATEST_LINK}" \
+  if rsync -av --compress --info=progress2 --delete --link-dest="${LATEST_LINK}" \
     --exclude=".cache" \
     --log-file="${LOG_FILE}" \
     "${SOURCE_DIR}/" \
@@ -115,7 +111,3 @@ fi
 ln -s "${BACKUP_PATH}" "${LATEST_LINK}"
 
 log_info "Latest backup link updated."
-
-# Remove old backups
-find "${DELETED_BACKUP_DIR}" -type f -mtime +"${RETENTION_DAYS}" -exec rm -f {} \;
-log_info "Old backups older than ${RETENTION_DAYS} days removed from ${DELETED_BACKUP_DIR}."
