@@ -18,11 +18,6 @@ usage() {
   exit 1
 }
 
-# Check for help option
-if [[ "$#" -eq 0 ]]; then
-  usage
-fi
-
 DRY_RUN=""
 POSITIONAL=()
 
